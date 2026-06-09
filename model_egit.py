@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from xgboost import XGBClassifier
 import joblib
+import matplotlib.pyplot as plt
 
 # Veri setini yükle
 df = pd.read_csv("online_retail_II.csv")
@@ -72,3 +73,26 @@ print(sonuc_tablosu.round(4).to_string())
 # XGBoost modelini kaydet
 joblib.dump(xgb_model, "xgboost_model.pkl")
 print("\nXGBoost modeli 'xgboost_model.pkl' olarak kaydedildi.")
+
+# XGBoost özellik önem düzeylerini hesapla ve görselleştir
+turkce_etiketler = {
+    "toplam_siparis_sayisi": "Toplam Sipariş Sayısı",
+    "toplam_urun_cesidi": "Toplam Ürün Çeşidi",
+    "en_cok_ulke_encoded": "Ülke (Kodlanmış)",
+}
+onem_skorlari = xgb_model.feature_importances_
+etiketler = [turkce_etiketler[ozellik] for ozellik in ozellikler]
+
+siralama = np.argsort(onem_skorlari)
+etiketler_sirali = [etiketler[i] for i in siralama]
+onem_sirali = onem_skorlari[siralama]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.barh(etiketler_sirali, onem_sirali, color="steelblue")
+ax.set_title("Değişken Önem Düzeyleri", fontsize=14, fontweight="bold")
+ax.set_xlabel("Önem Skoru")
+ax.set_ylabel("Değişkenler")
+plt.tight_layout()
+plt.savefig("feature_importance.png", dpi=150)
+plt.close()
+print("Özellik önem grafiği 'feature_importance.png' olarak kaydedildi.")
